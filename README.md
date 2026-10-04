@@ -1,7 +1,6 @@
 # Fetchly
 
-<p align="center">
-  <img src="public/logo.png" alt="Fetchly Logo" width="120" />
+https://res.cloudinary.com/dg7emvrh9/image/upload/v1791132631/SerialThriller_xllpwi.jpg="Fetchly Logo" width="120" />
 </p>
 
 <p align="center">
