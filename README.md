@@ -1,6 +1,7 @@
 # Fetchly
 
-https://res.cloudinary.com/dg7emvrh9/image/upload/v1791132631/SerialThriller_xllpwi.jpg="Fetchly Logo" width="120" />
+<p align="center">
+  <img src="https://res.cloudinary.com/dg7emvrh9/image/upload/v1791132631/SerialThriller_xllpwi.jpg" alt="Fetchly Logo" width="120" />
 </p>
 
 <p align="center">
@@ -12,13 +13,11 @@ https://res.cloudinary.com/dg7emvrh9/image/upload/v1791132631/SerialThriller_xll
 </p>
 
 <p align="center">
-  <a href="#what-is-fetchly">What is Fetchly?</a> •
   <a href="#features">Features</a> •
   <a href="#how-it-works">How It Works</a> •
   <a href="#use-cases">Use Cases</a> •
   <a href="#getting-started">Getting Started</a> •
-  <a href="#roadmap">Roadmap</a> •
-  <a href="#contributing">Contributing</a>
+  <a href="#roadmap">Roadmap</a>
 </p>
 
 ---
