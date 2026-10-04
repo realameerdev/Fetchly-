@@ -449,7 +449,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4">
             {/* Header info */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3.5 border-b border-slate-200/80">
-              <div className="min-w-0 space-y-1">
+              <div className="min-w-0 space-y-1.5 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#EB4423] shrink-0" />
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
@@ -471,7 +471,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
               </div>
 
               {/* Stats badges */}
-              <div className="flex flex-wrap sm:flex-col gap-1.5 sm:items-end text-xs font-semibold text-slate-500 shrink-0">
+              <div className="flex items-center sm:flex-col gap-2 shrink-0 self-start text-xs font-semibold text-slate-500">
                 <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-lg">
                   {extractedData.wordCount || completedResult.wordCount} words
                 </span>
@@ -681,40 +681,42 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             )}
 
             {/* ACTION BUTTONS ROW: Responsive with zero mobile overlapping */}
-            <div className="pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+            <div className="pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer order-2 sm:order-1"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-[#EB4423]" />
                 <span>Run Another URL</span>
               </button>
 
-              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 order-1 sm:order-2">
-                <button
-                  type="button"
-                  onClick={handleCopyContent}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer truncate"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
-                  <span className="truncate">{copied ? 'Copied' : 'Copy'}</span>
-                </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleCopyContent}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
+                    <span>{copied ? 'Copied' : 'Copy'}</span>
+                  </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsPreviewOpen(true)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-orange-50 hover:bg-orange-100 text-[#EB4423] border border-orange-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs truncate"
-                >
-                  <Eye className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Preview File</span>
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsPreviewOpen(true)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 text-[#EB4423] border border-orange-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Eye className="w-3.5 h-3.5 shrink-0" />
+                    <span>Preview File</span>
+                  </button>
+                </div>
 
                 <button
                   type="button"
                   disabled={isDownloading}
                   onClick={handleDownload}
-                  className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-5 py-2 bg-[#EB4423] hover:bg-[#d43a1a] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#EB4423] hover:bg-[#d43a1a] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
                 >
                   <Download className="w-3.5 h-3.5 shrink-0" />
                   <span>{isDownloading ? 'Generating...' : `Download ${format}`}</span>

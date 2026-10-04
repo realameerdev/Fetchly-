@@ -1,7 +1,8 @@
 {
-  "name": "react-example",
+  "name": "fetchly",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "homepage": "https://fetchlyy.vercel.app/",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
