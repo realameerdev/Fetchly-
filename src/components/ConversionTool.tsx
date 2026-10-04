@@ -15,14 +15,18 @@ import {
   CheckCircle2, 
   RefreshCw,
   Eye,
-  Play,
   Copy,
   ExternalLink,
   Layers,
   RotateCcw,
   BookOpen,
   Lightbulb,
-  Quote
+  Quote,
+  AlertCircle,
+  AlertTriangle,
+  Sparkles,
+  X,
+  FileCheck
 } from 'lucide-react';
 import { FilePreviewModal, ExtractedPageData } from './FilePreviewModal';
 import { 
@@ -42,7 +46,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
   initialFormat = 'PDF',
   variant = 'hero'
 }) => {
-  // Start with a completely blank URL input as requested
+  // Start with a completely blank URL input
   const [url, setUrl] = useState('');
   const [format, setFormat] = useState<OutputFormat>(initialFormat);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -54,6 +58,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
   const [viewTab, setViewTab] = useState<'formatted' | 'raw'>('formatted');
   const [activeComponentTab, setActiveComponentTab] = useState<'note' | 'document' | 'research'>('note');
   const [isDownloading, setIsDownloading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [completedResult, setCompletedResult] = useState<{
     filename: string;
     fileSize: string;
@@ -61,9 +66,10 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
     wordCount: number;
     title: string;
     summary: string;
+    engine?: 'firecrawl' | 'semantic-ai';
   } | null>(null);
 
-  // Feature toggles for realistic converter feel
+  // Feature toggles for converter feel
   const [readerMode, setReaderMode] = useState(true);
   const [includeImages, setIncludeImages] = useState(true);
 
@@ -78,20 +84,21 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
     if (!url.trim()) return;
 
     setIsProcessing(true);
+    setErrorMessage(null);
     setCompletedResult(null);
     setProgressPercent(15);
-    setProgressStep('Connecting to live host and fetching URL...');
+    setProgressStep('Connecting to host and loading webpage...');
 
     try {
       const stepTimer1 = setTimeout(() => {
         setProgressPercent(45);
-        setProgressStep('Analyzing deep page architecture & extracting notes...');
-      }, 500);
+        setProgressStep('Executing JavaScript & waiting for dynamic page render...');
+      }, 600);
 
       const stepTimer2 = setTimeout(() => {
         setProgressPercent(75);
-        setProgressStep(`Extracting modular notes, key findings & clean ${format}...`);
-      }, 1100);
+        setProgressStep(`Extracting main content and structuring clean ${format} file...`);
+      }, 1400);
 
       const response = await fetch('/api/fetch-url', {
         method: 'POST',
@@ -109,15 +116,15 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
 
       const result = await response.json();
 
-      if (!response.ok || !result.data) {
-        throw new Error(result.error || 'Failed to parse URL content.');
+      if (!response.ok || !result.success || !result.data) {
+        throw new Error(result.error || 'The webpage could not be loaded or processed. Please verify the URL.');
       }
 
       const doc: ExtractedPageData = result.data;
       setExtractedData(doc);
 
       setProgressPercent(100);
-      setProgressStep('Deep research and component extraction complete!');
+      setProgressStep('Content extraction and processing complete!');
 
       const extension = format === 'PDF' ? 'pdf' : format === 'Markdown' ? 'md' : format === 'TXT' ? 'txt' : format === 'HTML' ? 'html' : 'png';
       const cleanFilename = (doc.title || doc.domain || 'document')
@@ -131,68 +138,17 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
         format,
         wordCount: doc.wordCount || 1200,
         title: doc.title,
-        summary: doc.summary || 'Clean document structure and notes extracted.'
+        summary: doc.summary || 'Clean document structure and notes extracted.',
+        engine: doc.engine
       });
 
       setIsProcessing(false);
     } catch (err: any) {
-      console.warn('API fallback applied:', err);
-      const domain = url.replace(/^https?:\/\//, '').split('/')[0] || 'web';
-      const fallbackTitle = `${domain.charAt(0).toUpperCase() + domain.slice(1)} Web Article`;
-      const fallbackSummary = `Extracted core article and editorial content from ${url}. All advertisements, tracking beacons, and sidebars have been stripped.`;
-      
-      const takeaways = [
-        `Verified clean semantic extraction from ${domain}.`,
-        `100% of banner ads, tracking scripts, and cookie modals removed.`,
-        `Extracted structured note with key takeaways and executive summary.`,
-        `Ready for local download in PDF, Markdown, TXT, HTML, or PNG.`
-      ];
-
-      const noteMd = `# 📝 Research Note: ${fallbackTitle}\n**Source:** ${url}\n**Date:** ${new Date().toLocaleDateString()}\n\n---\n\n### 🎯 Core Thesis\n${fallbackSummary}\n\n### 📌 Key Takeaways\n${takeaways.map(t => `- ${t}`).join('\n')}\n\n### 💡 Action Items\n- Save this note into Obsidian or Notion.\n- Download the full PDF for offline archival.`;
-
-      const fallbackDoc: ExtractedPageData = {
-        title: fallbackTitle,
-        domain: domain,
-        sourceUrl: url,
-        wordCount: 1350,
-        clutterReduction: '76%',
-        summary: fallbackSummary,
-        markdown: `# ${fallbackTitle}\n*Source: ${url}*\n\n> "${fallbackSummary}"\n\n## Overview\nWeb content extraction strips navigation elements, popups, and tracking scripts while maintaining semantic structure.\n\n### Highlights\n- Distraction-free clean reading\n- Structured formatting preserved\n- Converted via Fetchly`,
-        plainText: `TITLE: ${fallbackTitle}\nSOURCE: ${url}\n\n${fallbackSummary}\n\nExtracted 1,350 words in clean plain text.`,
-        html: `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${fallbackTitle}</title><style>body{font-family:sans-serif;max-width:800px;margin:40px auto;padding:0 20px;line-height:1.6;}</style></head><body><h1>${fallbackTitle}</h1><p>${fallbackSummary}</p></body></html>`,
-        topics: [domain, 'Extracted Content', 'Archive', 'ResearchNote'],
-        notes: {
-          title: `Research Note: ${fallbackTitle}`,
-          markdown: noteMd,
-          plainText: noteMd.replace(/[#*`>_]/g, ''),
-          keyTakeaways: takeaways,
-          tags: [domain, 'WebArchive', 'ResearchNote']
-        },
-        keyFindings: [
-          { label: 'Primary Content Extraction', detail: `Successfully isolated core textual prose while eliminating headers, footers, and sidebars.` },
-          { label: 'Signal-to-Noise Ratio', detail: `Reduced total DOM overhead by ~76%, leaving pure readable content.` },
-          { label: 'Permanent Record', detail: `Created offline-capable snapshot immune to link rot or live page deprecation.` }
-        ],
-        quotes: [
-          { quote: `The web is humanity's largest dynamic library, but saving clean copies requires stripping away modern web clutter.`, author: `${domain} Editorial Context`, context: 'Source extraction' }
-        ]
-      };
-
-      setExtractedData(fallbackDoc);
-      setProgressPercent(100);
-
-      const extension = format === 'PDF' ? 'pdf' : format === 'Markdown' ? 'md' : format === 'TXT' ? 'txt' : format === 'HTML' ? 'html' : 'png';
-
-      setCompletedResult({
-        filename: `fetchly_${domain}_archive.${extension}`,
-        fileSize: format === 'PNG' ? '1.8 MB' : format === 'PDF' ? '420 KB' : '26 KB',
-        format,
-        wordCount: 1350,
-        title: fallbackTitle,
-        summary: fallbackSummary
-      });
-
+      console.error('URL processing failure:', err);
       setIsProcessing(false);
+      setProgressPercent(0);
+      setProgressStep('');
+      setErrorMessage(err.message || 'Failed to process the URL. Please ensure it is a live, publicly reachable website.');
     }
   };
 
@@ -200,11 +156,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
     if (!extractedData) return;
     setIsDownloading(true);
     try {
-      await downloadDocument(
-        extractedData, 
-        format, 
-        completedResult?.filename ? completedResult.filename.replace(/\.[a-z0-9]+$/i, '') : undefined
-      );
+      await downloadDocument(extractedData, format);
     } catch (err) {
       console.error('Download error:', err);
     } finally {
@@ -212,35 +164,31 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
     }
   };
 
-  const handleReset = () => {
-    setCompletedResult(null);
-    setExtractedData(null);
-    setProgressPercent(0);
-    setProgressStep('');
-  };
-
   const handleCopyContent = () => {
     if (!extractedData) return;
-    let textToCopy = '';
-    if (activeComponentTab === 'note' && extractedData.notes) {
-      textToCopy = extractedData.notes.markdown;
-    } else if (activeComponentTab === 'research') {
-      textToCopy = JSON.stringify(extractedData.keyFindings || [], null, 2);
-    } else {
-      textToCopy = format === 'Markdown' 
-        ? (extractedData.markdown || '') 
-        : format === 'HTML' 
-        ? (extractedData.html || '') 
-        : (extractedData.plainText || '');
-    }
+    const textToCopy = (format === 'HTML' 
+      ? (extractedData.html || extractedData.plainText) 
+      : format === 'Markdown' 
+      ? (extractedData.markdown || extractedData.plainText) 
+      : (extractedData.plainText || extractedData.markdown)) || '';
+
     navigator.clipboard.writeText(textToCopy);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const handleReset = () => {
+    setCompletedResult(null);
+    setExtractedData(null);
+    setErrorMessage(null);
+    setProgressPercent(0);
+    setProgressStep('');
+    setUrl('');
+  };
+
   const formatList: { id: OutputFormat; label: string; desc: string; icon: React.ReactNode }[] = [
-    { id: 'PDF', label: 'PDF', desc: 'Clean document', icon: <FileText className="w-4 h-4 text-red-500" /> },
-    { id: 'Markdown', label: 'Markdown', desc: 'Structured text', icon: <Code className="w-4 h-4 text-blue-500" /> },
+    { id: 'PDF', label: 'PDF', desc: 'Paginated print', icon: <FileText className="w-4 h-4 text-red-500" /> },
+    { id: 'Markdown', label: 'Markdown', desc: 'Clean headers', icon: <Code className="w-4 h-4 text-blue-500" /> },
     { id: 'TXT', label: 'TXT', desc: 'Plain text', icon: <FileText className="w-4 h-4 text-slate-500" /> },
     { id: 'HTML', label: 'HTML', desc: 'Webpage code', icon: <FileCode className="w-4 h-4 text-orange-500" /> },
     { id: 'PNG', label: 'PNG', desc: 'Screenshot', icon: <Globe className="w-4 h-4 text-emerald-500" /> },
@@ -248,7 +196,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
 
   return (
     <div className="w-full max-w-3xl mx-auto rounded-3xl bg-white border border-slate-200/90 shadow-xl shadow-slate-900/5 p-4 sm:p-7 md:p-8 relative text-left">
-      {/* Top Interface Bar - Responsive and clean on all viewports */}
+      {/* Top Interface Bar */}
       <div className="flex items-center justify-between pb-3 sm:pb-4 mb-4 sm:mb-6 border-b border-slate-100 gap-2">
         <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
           <div className="flex items-center gap-1 shrink-0">
@@ -264,22 +212,51 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           <span className="inline-flex items-center gap-1 sm:gap-1.5 text-[11px] sm:text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 sm:px-2.5 py-0.5 rounded-full border border-emerald-200/60">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            Engine Ready
+            Conversion Engine Ready
           </span>
         </div>
       </div>
 
+      {/* Error Alert Banner */}
+      {errorMessage && (
+        <div className="mb-5 p-4 bg-red-50 border-2 border-red-200 rounded-2xl text-left space-y-2 animate-fadeIn">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-start gap-2.5">
+              <AlertTriangle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs sm:text-sm font-extrabold text-red-900">
+                  URL Processing Failed
+                </h4>
+                <p className="text-xs text-red-700 mt-0.5 leading-relaxed">
+                  {errorMessage}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setErrorMessage(null)}
+              className="text-xs font-bold text-red-600 hover:text-red-800 bg-white hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 cursor-pointer shrink-0"
+            >
+              Dismiss
+            </button>
+          </div>
+          <div className="text-[11px] text-red-600/90 pl-7">
+            Tip: Please ensure the link is a public, currently reachable website (e.g. <code>https://en.wikipedia.org/wiki/Web_scraping</code>).
+          </div>
+        </div>
+      )}
+
       {/* Input Form State */}
       {!completedResult && !isProcessing && (
         <form onSubmit={handleStartConversion} className="space-y-5 sm:space-y-6">
-          {/* Step 1: URL Input - Starts completely blank */}
+          {/* Step 1: URL Input */}
           <div>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 mb-2">
-              <label className="text-xs font-bold text-slate-500 tracking-wider uppercase shrink-0">
-                01 — Paste Public URL
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
+              <label className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+                01 — Enter Any Public Web Link or Topic
               </label>
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
-                <span className="text-[11px] text-slate-400 shrink-0 font-medium">Quick paste:</span>
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
+                <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Try:</span>
                 {samplePresets.map((preset, i) => (
                   <button
                     key={i}
@@ -308,10 +285,10 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                 <button
                   type="button"
                   onClick={() => setUrl('')}
-                  className="absolute right-3 p-1 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer"
+                  className="absolute right-3 p-1.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer hover:bg-slate-200/60 transition-colors"
                   title="Clear input"
                 >
-                  ✕
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
@@ -432,18 +409,22 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
         </div>
       )}
 
-      {/* EXTRACTED COMPONENTS WORKBENCH: Users can download individual components or full files */}
+      {/* EXTRACTED COMPONENTS WORKBENCH */}
       {completedResult && extractedData && (
         <div className="py-2 space-y-4 sm:space-y-5 animate-fadeIn">
           {/* Status Header Badge */}
           <div className="flex flex-wrap items-center justify-between gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-900 text-xs font-semibold">
             <div className="flex items-center gap-2 min-w-0">
               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span className="truncate">Deep research complete — notes & files extracted!</span>
+              <span className="truncate">
+                Processing complete — clean files & notes extracted
+              </span>
             </div>
-            <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0">
-              HTTP 200 OK
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="bg-emerald-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                HTTP 200 OK
+              </span>
+            </div>
           </div>
 
           {/* Component Card Container */}
@@ -482,7 +463,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
               </div>
             </div>
 
-            {/* Component Tab Switcher: Note vs Full Document vs Research Breakdown */}
+            {/* Component Tab Switcher */}
             <div className="space-y-1">
               <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
                 Choose Component to View & Download:
@@ -498,7 +479,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                   }`}
                 >
                   <BookOpen className="w-3.5 h-3.5" />
-                  <span>📝 Extracted Note</span>
+                  <span>Extracted Note</span>
                   <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${activeComponentTab === 'note' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-[#EB4423]'}`}>
                     Ready
                   </span>
@@ -514,7 +495,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                   }`}
                 >
                   <FileText className="w-3.5 h-3.5" />
-                  <span>📄 Full Clean Document</span>
+                  <span>Full Clean Document</span>
                 </button>
 
                 <button
@@ -527,28 +508,29 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                   }`}
                 >
                   <Lightbulb className="w-3.5 h-3.5" />
-                  <span>🔍 Key Research Points</span>
+                  <span>Key Research Points</span>
                 </button>
               </div>
             </div>
 
-            {/* TAB CONTENT 1: EXTRACTED NOTE */}
+            {/* TAB CONTENT 1: EXTRACTED NOTE - RESPONSIVE & NO OVERLAPPING */}
             {activeComponentTab === 'note' && (
               <div className="bg-white border border-orange-200/90 rounded-xl p-3.5 sm:p-5 space-y-3.5 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-orange-100">
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    <span className="text-xs font-extrabold text-slate-900">
+                {/* Header with Title and Action Buttons: Stacks cleanly on mobile */}
+                <div className="flex flex-col gap-2.5 pb-2.5 border-b border-orange-100 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 shrink-0" />
+                    <span className="text-xs font-extrabold text-slate-900 break-words line-clamp-2">
                       {extractedData.notes?.title || `Executive Note: ${extractedData.title}`}
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       onClick={() => downloadExtractedNote(extractedData, 'Markdown')}
                       className="px-2.5 py-1 bg-[#EB4423] hover:bg-[#d43a1a] text-white text-xs font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                     >
-                      <Download className="w-3 h-3" />
+                      <Download className="w-3 h-3 shrink-0" />
                       <span>Download Note (.md)</span>
                     </button>
                     <button
@@ -556,7 +538,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                       onClick={() => downloadExtractedNote(extractedData, 'PDF')}
                       className="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-lg transition-all shadow-2xs inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
                     >
-                      <Download className="w-3 h-3 text-red-500" />
+                      <Download className="w-3 h-3 text-red-500 shrink-0" />
                       <span>PDF Note</span>
                     </button>
                   </div>
@@ -565,7 +547,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                 {/* Note Core Thesis */}
                 <div className="p-3 bg-amber-50/70 border-l-4 border-amber-500 rounded-r-lg text-xs text-slate-800 leading-relaxed">
                   <span className="font-bold text-amber-800 block uppercase text-[10px] mb-0.5">
-                    🎯 Extracted Core Note:
+                    Extracted Core Note:
                   </span>
                   {extractedData.summary}
                 </div>
@@ -574,11 +556,11 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                 {extractedData.notes?.keyTakeaways && extractedData.notes.keyTakeaways.length > 0 && (
                   <div className="space-y-1.5">
                     <span className="text-xs font-bold text-slate-900 block">
-                      📌 Bullet Takeaways:
+                      Bullet Takeaways:
                     </span>
-                    <ul className="space-y-1 text-xs text-slate-700">
+                    <ul className="space-y-1.5 text-xs text-slate-700">
                       {extractedData.notes.keyTakeaways.map((point, idx) => (
-                        <li key={idx} className="flex items-start gap-1.5">
+                        <li key={idx} className="flex items-start gap-2">
                           <span className="text-[#EB4423] font-bold shrink-0 mt-0.5">•</span>
                           <span>{point}</span>
                         </li>
@@ -632,7 +614,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                         : extractedData.plainText?.slice(0, 1400)}
                       {(extractedData.markdown?.length || 0) > 1400 && (
                         <p className="text-xs text-orange-600 font-semibold pt-1 italic">
-                          ... [Click "Preview Full File" below to view the full multi-page document]
+                          ... [Click "Preview File" below to view the full multi-page document]
                         </p>
                       )}
                     </div>
@@ -652,14 +634,14 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             {/* TAB CONTENT 3: DEEP RESEARCH & FINDINGS */}
             {activeComponentTab === 'research' && (
               <div className="bg-white border border-indigo-200 rounded-xl p-3.5 sm:p-5 space-y-3 shadow-xs">
-                <div className="flex items-center justify-between pb-2 border-b border-indigo-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2 border-b border-indigo-100">
                   <span className="text-xs font-extrabold text-indigo-900">
                     Structured Research Insights
                   </span>
                   <button
                     type="button"
                     onClick={() => downloadResearchFindings(extractedData)}
-                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer whitespace-nowrap"
+                    className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg transition-all shadow-xs inline-flex items-center gap-1 cursor-pointer whitespace-nowrap self-start sm:self-auto"
                   >
                     <Download className="w-3 h-3" />
                     <span>Download Findings (.md)</span>
@@ -725,7 +707,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
         </div>
       )}
 
-      {/* Full Feature File Preview Modal with Cancel / Go Back buttons */}
+      {/* Full Feature File Preview Modal */}
       <FilePreviewModal
         isOpen={isPreviewOpen}
         onClose={() => setIsPreviewOpen(false)}

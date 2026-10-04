@@ -16,6 +16,7 @@ import {
 import { OutputFormat } from './ConversionTool';
 import { FilePreviewModal } from './FilePreviewModal';
 import { downloadDocument } from '../utils/fileDownloader';
+import { SilkReveal } from './SilkReveal';
 
 export const ProductPreview: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'preview' | 'code'>('preview');
@@ -78,7 +79,7 @@ All advertisements, analytics scripts, and navigation bars have been stripped.`;
   return (
     <section className="py-20 sm:py-24 bg-[#FAFAFB] border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-2.5 sm:space-y-3">
+        <SilkReveal delay={0} className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 space-y-2.5 sm:space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Interface In Action
           </span>
@@ -88,10 +89,11 @@ All advertisements, analytics scripts, and navigation bars have been stripped.`;
           <p className="text-sm sm:text-base text-slate-500 font-normal">
             Preview your converted file in any format before saving. A focused workspace built for clarity.
           </p>
-        </div>
+        </SilkReveal>
 
         {/* Desktop App Interface Frame */}
-        <div className="max-w-5xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-900/10 overflow-hidden text-left">
+        <SilkReveal delay={120} distance={40}>
+          <div className="max-w-5xl mx-auto bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-xl shadow-slate-900/10 overflow-hidden text-left hover:border-orange-200 transition-colors">
           {/* Top Window Bar - Fully responsive layout without overlapping */}
           <div className="bg-slate-50 px-3 sm:px-6 py-3 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
             {/* Window controls + URL tag */}
@@ -321,6 +323,7 @@ All advertisements, analytics scripts, and navigation bars have been stripped.`;
             )}
           </div>
         </div>
+        </SilkReveal>
       </div>
 
       {/* Full Feature Preview Modal */}

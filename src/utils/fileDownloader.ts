@@ -113,9 +113,33 @@ export function generateValidPdfBlob(docData: ExtractedPageData): Blob {
 }
 
 /**
- * Generate a genuine, valid PNG image using HTML5 Canvas that opens in any photo viewer.
+ * Generate a genuine, valid PNG image using actual Firecrawl rendered screenshot or HTML5 Canvas.
  */
 export async function generateValidPngBlob(docData: ExtractedPageData): Promise<Blob> {
+  // If Firecrawl captured a real rendered visual screenshot of the webpage, use it directly!
+  if (docData.screenshot) {
+    try {
+      if (docData.screenshot.startsWith('data:image/')) {
+        const parts = docData.screenshot.split(',');
+        const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
+        const byteString = atob(parts[1]);
+        const ab = new ArrayBuffer(byteString.length);
+        const ia = new Uint8Array(ab);
+        for (let i = 0; i < byteString.length; i++) {
+          ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], { type: mime });
+      } else if (docData.screenshot.startsWith('http')) {
+        const res = await fetch(docData.screenshot);
+        if (res.ok) {
+          return await res.blob();
+        }
+      }
+    } catch (err) {
+      console.warn('Direct screenshot blob conversion failed, falling back to canvas:', err);
+    }
+  }
+
   const canvas = document.createElement('canvas');
   const width = 1200;
   const height = 1500;
@@ -341,7 +365,7 @@ export async function downloadExtractedNote(
  */
 export async function downloadResearchFindings(docData: ExtractedPageData): Promise<void> {
   const cleanTitle = (docData.title || 'research').replace(/[^a-z0-9]+/gi, '_').slice(0, 30).toLowerCase();
-  let content = `# 🔍 Research Findings & Takeaways: ${docData.title}\n`;
+  let content = `# Research Findings & Takeaways: ${docData.title}\n`;
   content += `**Source:** ${docData.sourceUrl}\n**Date:** ${new Date().toLocaleDateString()}\n\n---\n\n`;
 
   if (docData.keyFindings && docData.keyFindings.length > 0) {

@@ -5,15 +5,14 @@
 
 import React from 'react';
 import { 
-  Check, 
   Zap, 
   Sliders, 
-  Clock, 
   FileCheck, 
   Layers, 
   Smile, 
   ShieldCheck 
 } from 'lucide-react';
+import { SilkReveal } from './SilkReveal';
 
 export const WhyFetchly: React.FC = () => {
   const benefits = [
@@ -53,8 +52,8 @@ export const WhyFetchly: React.FC = () => {
     <section id="why-fetchly" className="py-24 bg-white border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          {/* Left Column (Exact Reference Image Style) */}
-          <div className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
+          {/* Left Column */}
+          <SilkReveal direction="left" delay={0} className="lg:col-span-5 lg:sticky lg:top-24 space-y-6">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
               Benefits
             </span>
@@ -65,7 +64,7 @@ export const WhyFetchly: React.FC = () => {
               Unlock speed, consistency, and clean file creation with our automated parsing engine designed to strip away web bloat.
             </p>
 
-            {/* Pill Tags Row (from Reference Design) */}
+            {/* Pill Tags Row */}
             <div className="flex flex-wrap gap-2 pt-2">
               {[
                 'Robust Security',
@@ -76,33 +75,34 @@ export const WhyFetchly: React.FC = () => {
               ].map((pill, idx) => (
                 <span 
                   key={idx}
-                  className="px-3.5 py-1.5 bg-[#F6F7F9] border border-slate-200/80 rounded-full text-xs font-semibold text-slate-700"
+                  className="px-3.5 py-1.5 bg-[#F6F7F9] border border-slate-200/80 rounded-full text-xs font-semibold text-slate-700 hover:border-orange-300 transition-colors"
                 >
                   {pill}
                 </span>
               ))}
             </div>
-          </div>
+          </SilkReveal>
 
-          {/* Right Column: Stacked Benefit Cards (Exact Reference Image Style) */}
-          <div className="lg:col-span-7 space-y-8">
+          {/* Right Column: Stacked Benefit Cards */}
+          <div className="lg:col-span-7 space-y-4">
             {benefits.map((benefit, idx) => (
-              <div 
-                key={idx}
-                className="flex items-start gap-4 p-5 rounded-2xl hover:bg-[#F6F7F9] transition-colors group"
-              >
-                <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/80 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#EB4423] group-hover:text-white transition-colors text-[#EB4423]">
-                  {benefit.icon}
+              <SilkReveal key={idx} delay={idx * 70} direction="right">
+                <div 
+                  className="flex items-start gap-4 p-5 rounded-2xl bg-[#F6F7F9]/60 hover:bg-[#F6F7F9] border border-slate-200/60 hover:border-orange-200 hover:shadow-xs transition-all duration-300 group"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-orange-50 border border-orange-200/80 flex items-center justify-center shrink-0 mt-0.5 group-hover:bg-[#EB4423] group-hover:text-white transition-colors text-[#EB4423]">
+                    {benefit.icon}
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-lg font-extrabold text-slate-900">
+                      {benefit.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-slate-500 font-normal leading-relaxed">
+                      {benefit.desc}
+                    </p>
+                  </div>
                 </div>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-extrabold text-slate-900">
-                    {benefit.title}
-                  </h3>
-                  <p className="text-sm text-slate-500 font-normal leading-relaxed">
-                    {benefit.desc}
-                  </p>
-                </div>
-              </div>
+              </SilkReveal>
             ))}
           </div>
         </div>

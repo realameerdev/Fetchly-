@@ -4,7 +4,8 @@
  */
 
 import React from 'react';
-import { ArrowRight, CheckCircle2, ShieldCheck, Zap } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
+import { SilkReveal } from './SilkReveal';
 
 export const WhatIsFetchly: React.FC = () => {
   return (
@@ -12,7 +13,7 @@ export const WhatIsFetchly: React.FC = () => {
       <div className="max-w-7xl mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
           {/* Left Column: Clear Explanation */}
-          <div className="lg:col-span-6 space-y-6">
+          <SilkReveal direction="left" delay={0} className="lg:col-span-6 space-y-6">
             <span className="text-xs font-bold uppercase tracking-wider text-[#EB4423]">
               What is Fetchly?
             </span>
@@ -29,17 +30,17 @@ export const WhatIsFetchly: React.FC = () => {
             <div className="pt-2 flex flex-wrap gap-4">
               <a
                 href="#supported-formats"
-                className="inline-flex items-center gap-2 text-sm font-bold text-[#EB4423] hover:text-[#d43a1a]"
+                className="inline-flex items-center gap-2 text-sm font-bold text-[#EB4423] hover:text-[#d43a1a] group"
               >
                 <span>View all 5 supported formats</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </a>
             </div>
-          </div>
+          </SilkReveal>
 
           {/* Right Column: Visual Feature Breakdown */}
-          <div className="lg:col-span-6">
-            <div className="bg-[#F6F7F9] rounded-3xl p-7 sm:p-9 border border-slate-200/80 space-y-4">
+          <SilkReveal direction="right" delay={120} className="lg:col-span-6">
+            <div className="bg-[#F6F7F9] rounded-3xl p-7 sm:p-9 border border-slate-200/80 space-y-4 hover:shadow-lg hover:border-orange-200 transition-all duration-300">
               <div className="flex items-center justify-between pb-3 border-b border-slate-200/70">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   Supported Input & Output Matrix
@@ -59,7 +60,7 @@ export const WhatIsFetchly: React.FC = () => {
                 ].map((item, idx) => (
                   <div 
                     key={idx}
-                    className="bg-white rounded-2xl p-4 border border-slate-200/70 flex items-center justify-between shadow-2xs hover:border-orange-300 transition-colors"
+                    className="bg-white rounded-2xl p-4 border border-slate-200/70 flex items-center justify-between shadow-2xs hover:border-orange-300 hover:-translate-y-0.5 transition-all duration-200"
                   >
                     <div className="space-y-0.5">
                       <div className="text-sm font-extrabold text-slate-900">{item.name}</div>
@@ -72,7 +73,7 @@ export const WhatIsFetchly: React.FC = () => {
                 ))}
               </div>
             </div>
-          </div>
+          </SilkReveal>
         </div>
       </div>
     </section>

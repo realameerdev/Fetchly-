@@ -74,6 +74,8 @@ export interface ExtractedPageData {
   markdown?: string;
   plainText?: string;
   html?: string;
+  screenshot?: string;
+  engine?: 'firecrawl' | 'semantic-ai';
   topics?: string[];
   notes?: ExtractedNote;
   keyFindings?: ResearchFinding[];
@@ -196,7 +198,7 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
   // Note data fallback
   const noteData: ExtractedNote = documentData?.notes || {
     title: `Executive Note: ${displayTitle}`,
-    markdown: `# 📝 Executive Note: ${displayTitle}\n\n**Source:** ${sourceUrl}\n**Date:** ${new Date().toLocaleDateString()}\n\n### 🎯 Core Thesis\n${displaySummary}\n\n### 📌 Key Takeaways\n- Distilled directly from ${urlDomain}.\n- Stripped 100% of banner ads and web bloat.\n- Permanent archive format for personal note systems.`,
+    markdown: `# Executive Note: ${displayTitle}\n\n**Source:** ${sourceUrl}\n**Date:** ${new Date().toLocaleDateString()}\n\n### Core Thesis\n${displaySummary}\n\n### Key Takeaways\n- Distilled directly from ${urlDomain}.\n- Stripped 100% of banner ads and web bloat.\n- Permanent archive format for personal note systems.`,
     plainText: `EXECUTIVE NOTE: ${displayTitle}\nSource: ${sourceUrl}\nDate: ${new Date().toLocaleDateString()}\n\nCORE THESIS:\n${displaySummary}\n\nKEY TAKEAWAYS:\n- Distilled directly from ${urlDomain}.\n- Stripped 100% of banner ads and web bloat.\n- Permanent archive format for personal note systems.`,
     keyTakeaways: [
       `Distilled directly from ${urlDomain} without web bloat.`,
@@ -592,18 +594,38 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
 
               {/* FORMAT 5: PNG PREVIEW */}
               {activeFormat === 'PNG' && (
-                <div className="w-full max-w-2xl bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-lg text-left space-y-4">
+                <div className="w-full max-w-3xl bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-lg text-left space-y-4">
                   <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-                    <span className="text-[10px] font-bold text-emerald-600 uppercase">2x Retina Full-Page Capture</span>
-                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">1200 x 1500px</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-emerald-600 uppercase">
+                        {documentData?.screenshot ? 'Rendered Webpage Screenshot (PNG)' : '2x Retina Page Capture'}
+                      </span>
+                    </div>
+                    <span className="text-xs font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded">Full Resolution</span>
                   </div>
-                  <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50 text-center space-y-3">
-                    <Globe className="w-12 h-12 text-[#EB4423] mx-auto opacity-70" />
-                    <div className="text-sm font-extrabold text-slate-900">{displayTitle}.png</div>
-                    <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                      High-DPI rasterized PNG capturing the complete typography, callouts, and clean layout ready for design presentations.
-                    </p>
-                  </div>
+
+                  {documentData?.screenshot ? (
+                    <div className="space-y-3">
+                      <div className="rounded-xl border border-slate-200 overflow-hidden max-h-[550px] overflow-y-auto bg-slate-50 shadow-inner">
+                        <img 
+                          src={documentData.screenshot} 
+                          alt={`Rendered screenshot of ${displayTitle}`}
+                          className="w-full h-auto object-top"
+                        />
+                      </div>
+                      <p className="text-[11px] text-slate-500 italic text-center">
+                        Genuine full-page viewport screenshot captured with live JavaScript execution.
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-200 rounded-xl p-6 bg-slate-50 text-center space-y-3">
+                      <Globe className="w-12 h-12 text-[#EB4423] mx-auto opacity-70" />
+                      <div className="text-sm font-extrabold text-slate-900">{displayTitle}.png</div>
+                      <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                        High-DPI rasterized PNG capturing the complete typography, callouts, and clean layout ready for design presentations.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -643,7 +665,7 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
                 {/* Core Thesis Card */}
                 <div className="p-4 bg-amber-50/70 border-l-4 border-amber-500 rounded-r-xl">
                   <span className="text-xs font-bold text-amber-800 block uppercase mb-1">
-                    🎯 Core Note Thesis:
+                    Core Note Thesis:
                   </span>
                   <p className="text-slate-800 text-xs sm:text-sm font-medium">
                     {displaySummary}
@@ -654,7 +676,7 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
                 {noteData.keyTakeaways && noteData.keyTakeaways.length > 0 && (
                   <div className="space-y-2">
                     <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-                      <span>📌 Key Takeaways & Action Items:</span>
+                      <span>Key Takeaways & Action Items:</span>
                     </h3>
                     <ul className="space-y-2">
                       {noteData.keyTakeaways.map((point, idx) => (

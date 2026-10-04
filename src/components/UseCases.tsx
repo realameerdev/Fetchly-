@@ -11,9 +11,9 @@ import {
   Archive, 
   Globe, 
   WifiOff, 
-  GraduationCap,
-  ArrowUpRight 
+  GraduationCap
 } from 'lucide-react';
+import { SilkReveal } from './SilkReveal';
 
 export const UseCases: React.FC = () => {
   const cases = [
@@ -64,7 +64,7 @@ export const UseCases: React.FC = () => {
   return (
     <section id="use-cases" className="py-24 bg-white border-b border-slate-100">
       <div className="max-w-7xl mx-auto px-6">
-        <div className="text-center max-w-2xl mx-auto mb-16 space-y-3">
+        <SilkReveal delay={0} className="text-center max-w-2xl mx-auto mb-16 space-y-3">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
             Everyday Utility
           </span>
@@ -74,41 +74,40 @@ export const UseCases: React.FC = () => {
           <p className="text-base text-slate-500 font-normal">
             Whether for deep work, research collections, or daily reading, Fetchly simplifies your web workflow.
           </p>
-        </div>
+        </SilkReveal>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cases.map((item, idx) => (
-            <div 
-              key={idx}
-              className={`bg-[#F6F7F9] rounded-3xl p-7 border border-slate-200/60 hover:bg-white hover:border-slate-300 hover:shadow-md transition-all flex flex-col justify-between ${
-                idx === 6 ? 'md:col-span-2 lg:col-span-1' : ''
-              }`}
-            >
-              <div>
-                <div className="flex items-center justify-between mb-5">
-                  <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center shadow-2xs">
-                    {item.icon}
+            <SilkReveal key={idx} delay={idx * 70} className="h-full">
+              <div 
+                className={`h-full bg-[#F6F7F9] rounded-3xl p-7 border border-slate-200/60 hover:bg-white hover:border-orange-300 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between ${
+                  idx === 6 ? 'md:col-span-2 lg:col-span-1' : ''
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-10 h-10 rounded-2xl bg-white border border-slate-200/80 flex items-center justify-center shadow-2xs">
+                      {item.icon}
+                    </div>
+                    <span className="text-[11px] font-bold text-slate-600 bg-white border border-slate-200/70 px-2.5 py-1 rounded-full shadow-2xs">
+                      {item.formatBadge}
+                    </span>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-600 bg-white border border-slate-200/70 px-2.5 py-1 rounded-full shadow-2xs">
-                    {item.formatBadge}
-                  </span>
+
+                  <h3 className="text-lg font-extrabold text-slate-900 mb-2">
+                    {item.title}
+                  </h3>
+                  <p className="text-xs text-slate-500 font-normal leading-relaxed">
+                    {item.desc}
+                  </p>
                 </div>
 
-                <h3 className="text-lg font-extrabold text-slate-900 mb-2">
-                  {item.title}
-                </h3>
-                <p className="text-xs text-slate-500 font-normal leading-relaxed">
-                  {item.desc}
-                </p>
+                <div className="mt-6 pt-3 border-t border-slate-200/50 flex items-center justify-between text-[11px] font-semibold text-slate-400">
+                  <span>Available Format</span>
+                  <span className="text-slate-800 font-bold">{item.formatBadge}</span>
+                </div>
               </div>
-
-              <div className="pt-5 mt-5 border-t border-slate-200/60 flex items-center justify-between text-[11px] font-bold text-slate-400">
-                <span>Use case 0{idx + 1}</span>
-                <span className="text-[#EB4423] inline-flex items-center gap-1">
-                  Ready to fetch <ArrowUpRight className="w-3 h-3" />
-                </span>
-              </div>
-            </div>
+            </SilkReveal>
           ))}
         </div>
       </div>
