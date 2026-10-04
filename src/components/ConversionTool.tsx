@@ -112,7 +112,8 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             format,
             readerMode,
             includeImages
-          })
+          }),
+          signal: AbortSignal.timeout(4000)
         });
 
         if (response.ok) {
@@ -122,7 +123,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
           }
         }
       } catch (backendErr) {
-        console.warn('Backend API fetch unavailable, running client extraction pipeline:', backendErr);
+        // Fallback instantly to client-side extraction
       }
 
       // If backend was not reached or returned an error, run resilient client-side extraction

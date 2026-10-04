@@ -5,9 +5,14 @@
 
 import { GoogleGenAI } from '@google/genai';
 
+function cleanEnvKey(key?: string): string {
+  if (!key) return '';
+  return key.replace(/^["']|["']$/g, '').trim();
+}
+
 function getGeminiClient(): GoogleGenAI | null {
-  const geminiApiKey = process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY;
-  return geminiApiKey ? new GoogleGenAI({}) : null;
+  const geminiApiKey = cleanEnvKey(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY);
+  return geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 }
 
 function markdownToPlainText(md: string): string {
@@ -50,16 +55,15 @@ async function scrapeWithFirecrawl(targetUrl: string, apiKey: string): Promise<a
     const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         url: targetUrl,
-        formats: ['markdown', 'html', 'screenshot@fullPage'],
+        formats: ['markdown', 'html'],
         onlyMainContent: true,
-        waitFor: 2000,
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) return null;
@@ -75,18 +79,18 @@ async function searchWithFirecrawl(query: string, apiKey: string): Promise<any> 
     const response = await fetch('https://api.firecrawl.dev/v1/search', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey.trim()}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         query: query,
-        limit: 3,
+        limit: 1,
         scrapeOptions: {
-          formats: ['markdown', 'html', 'screenshot@fullPage'],
+          formats: ['markdown', 'html'],
           onlyMainContent: true,
         },
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!response.ok) return null;
@@ -98,7 +102,6 @@ async function searchWithFirecrawl(query: string, apiKey: string): Promise<any> 
 }
 
 export default async function handler(req: any, res: any) {
-  // CORS setup
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
@@ -146,7 +149,7 @@ export default async function handler(req: any, res: any) {
       domain = 'source';
     }
 
-    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || process.env.VITE_FIRECRAWL_API_KEY;
+    const firecrawlApiKey = cleanEnvKey(process.env.FIRECRAWL_API_KEY || process.env.VITE_FIRECRAWL_API_KEY);
     const ai = getGeminiClient();
 
     let extractedData: any = null;
@@ -171,7 +174,6 @@ export default async function handler(req: any, res: any) {
           const pageTitle = meta.title || meta.ogTitle || `${domain.charAt(0).toUpperCase() + domain.slice(1)} Web Resource`;
           const rawMarkdown = firecrawlData.markdown || '';
           const cleanHtml = firecrawlData.html || firecrawlData.rawHtml || '';
-          const screenshot = firecrawlData.screenshot || firecrawlData['screenshot@fullPage'] || '';
           const plainText = markdownToPlainText(rawMarkdown);
           const wordCount = plainText ? plainText.split(/\s+/).filter(Boolean).length : 950;
           const readingTime = Math.max(1, Math.ceil(wordCount / 200));
@@ -181,7 +183,7 @@ export default async function handler(req: any, res: any) {
             `Processed and structured with full JavaScript execution.`,
             `Clean semantic extraction with 100% of banner ads and cookie popups removed.`,
             `Body text contains ${wordCount} words formatted with clean headings and lists.`,
-            screenshot ? `Full-page visual screenshot captured and ready for PNG export.` : `Multi-format export prepared.`
+            `Multi-format export prepared for offline reading.`
           ];
 
           const noteMarkdown = `# Research Note: ${pageTitle}\n**Source:** ${finalUrl}\n**Date:** ${new Date().toLocaleDateString()} · **Domain:** ${domain}\n\n---\n\n### Core Thesis\n${summary}\n\n### Key Takeaways\n${coreTakeaways.map(t => `- ${t}`).join('\n')}\n\n### Metadata\nTags: #${domain.replace(/[^a-z0-9]/gi, '')} #CleanArchive #Fetchly`;
@@ -199,7 +201,6 @@ export default async function handler(req: any, res: any) {
             markdown: rawMarkdown,
             plainText,
             html: cleanHtml,
-            screenshot,
             engine: 'firecrawl',
             topics: [domain, 'Web Content', 'Clean Archive'],
             notes: {
@@ -236,7 +237,7 @@ export default async function handler(req: any, res: any) {
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
             },
             redirect: 'follow',
-            signal: AbortSignal.timeout(10000),
+            signal: AbortSignal.timeout(6000),
           });
 
           if (response.ok) {
@@ -298,11 +299,11 @@ Return ONLY valid JSON matching:
             extractedData.engine = 'semantic-ai';
           }
         } catch (err) {
-          console.warn('Gemini error:', err);
+          // Fallback silently if Gemini quota is exceeded
         }
       }
 
-      // Deterministic Fallback
+      // 3. Fail-safe deterministic fallback
       if (!extractedData) {
         const bodyContent = cleanRawText && cleanRawText.length > 100 
           ? cleanRawText 

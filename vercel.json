@@ -1,9 +1,14 @@
 {
   "framework": "vite",
+  "functions": {
+    "api/*.ts": {
+      "maxDuration": 60
+    }
+  },
   "rewrites": [
     {
-      "source": "/api/fetch-url",
-      "destination": "/api/fetch-url"
+      "source": "/api/(.*)",
+      "destination": "/api/$1"
     },
     {
       "source": "/(.*)",

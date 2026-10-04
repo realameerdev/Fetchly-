@@ -16,10 +16,15 @@ const PORT = Number(process.env.PORT) || 3000;
 
 app.use(express.json({ limit: '25mb' }));
 
+function cleanEnvKey(key?: string): string {
+  if (!key) return '';
+  return key.replace(/^["']|["']$/g, '').trim();
+}
+
 // Initialize Google GenAI client
 function getGeminiClient(): GoogleGenAI | null {
-  const geminiApiKey = process.env.GEMINI_API_KEY;
-  return geminiApiKey ? new GoogleGenAI({}) : null;
+  const geminiApiKey = cleanEnvKey(process.env.GEMINI_API_KEY || process.env.VITE_GEMINI_API_KEY);
+  return geminiApiKey ? new GoogleGenAI({ apiKey: geminiApiKey }) : null;
 }
 
 // Helper to strip markdown symbols for clean plain text
@@ -174,7 +179,7 @@ app.post('/api/fetch-url', async (req: Request, res: Response) => {
       domain = rawInput.split('/')[0].replace('www.', '') || 'source';
     }
 
-    const firecrawlApiKey = process.env.FIRECRAWL_API_KEY || process.env.VITE_FIRECRAWL_API_KEY;
+    const firecrawlApiKey = cleanEnvKey(process.env.FIRECRAWL_API_KEY || process.env.VITE_FIRECRAWL_API_KEY);
     const ai = getGeminiClient();
 
     let extractedData: any = null;
@@ -327,13 +332,13 @@ Tags: #${domain.replace(/[^a-z0-9]/gi, '')} #Firecrawl #CleanArchive #Fetchly`;
             }
           }
         } catch (err: any) {
-          console.warn('Direct fetch attempt failed:', err?.message);
+          // Fallback silently if direct fetch is blocked by target site
         }
       }
 
       const cleanRawText = cleanHtmlToText(rawHtml).slice(0, 14000);
 
-      // Use Gemini to synthesize and extract deep accurate structured data
+      // Use Gemini to synthesize and extract deep accurate structured data (if quota permits)
       if (ai) {
         try {
           const prompt = `You are Fetchly's URL-to-file processing engine.
@@ -388,8 +393,8 @@ Return ONLY a valid JSON object matching this structure:
             extractedData = JSON.parse(aiResponse.text);
             extractedData.engine = 'semantic-ai';
           }
-        } catch (err) {
-          console.error('Gemini synthesis error:', err);
+        } catch (err: any) {
+          // If Gemini hits 429 quota or rate limit, fallback silently to deterministic extractor
         }
       }
 
