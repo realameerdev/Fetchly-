@@ -34,6 +34,7 @@ import {
   downloadExtractedNote, 
   downloadResearchFindings 
 } from '../utils/fileDownloader';
+import { extractUrlClientSide } from '../utils/clientExtractor';
 
 export type OutputFormat = 'PDF' | 'Markdown' | 'TXT' | 'HTML' | 'PNG';
 
@@ -56,7 +57,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
   const [extractedData, setExtractedData] = useState<ExtractedPageData | null>(null);
   const [copied, setCopied] = useState(false);
   const [viewTab, setViewTab] = useState<'formatted' | 'raw'>('formatted');
-  const [activeComponentTab, setActiveComponentTab] = useState<'note' | 'document' | 'research'>('note');
+  const [activeComponentTab, setActiveComponentTab] = useState<'note' | 'document' | 'research'>('document');
   const [isDownloading, setIsDownloading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [completedResult, setCompletedResult] = useState<{
@@ -100,28 +101,44 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
         setProgressStep(`Extracting main content and structuring clean ${format} file...`);
       }, 1400);
 
-      const response = await fetch('/api/fetch-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          url: url.trim(),
-          format,
-          readerMode,
-          includeImages
-        })
-      });
+      let doc: ExtractedPageData | null = null;
+
+      try {
+        const response = await fetch('/api/fetch-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            url: url.trim(),
+            format,
+            readerMode,
+            includeImages
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result && result.success && result.data) {
+            doc = result.data;
+          }
+        }
+      } catch (backendErr) {
+        console.warn('Backend API fetch unavailable, running client extraction pipeline:', backendErr);
+      }
+
+      // If backend was not reached or returned an error, run resilient client-side extraction
+      if (!doc) {
+        doc = await extractUrlClientSide(url.trim(), format);
+      }
 
       clearTimeout(stepTimer1);
       clearTimeout(stepTimer2);
 
-      const result = await response.json();
-
-      if (!response.ok || !result.success || !result.data) {
-        throw new Error(result.error || 'The webpage could not be loaded or processed. Please verify the URL.');
+      if (!doc) {
+        throw new Error('The webpage could not be loaded. Please verify the URL.');
       }
 
-      const doc: ExtractedPageData = result.data;
       setExtractedData(doc);
+      setActiveComponentTab('document');
 
       setProgressPercent(100);
       setProgressStep('Content extraction and processing complete!');
@@ -471,6 +488,22 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-1">
                 <button
                   type="button"
+                  onClick={() => setActiveComponentTab('document')}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+                    activeComponentTab === 'document'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  <span>Full Clean Document</span>
+                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${activeComponentTab === 'document' ? 'bg-slate-700 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                    Primary
+                  </span>
+                </button>
+
+                <button
+                  type="button"
                   onClick={() => setActiveComponentTab('note')}
                   className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
                     activeComponentTab === 'note'
@@ -480,22 +513,6 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                 >
                   <BookOpen className="w-3.5 h-3.5" />
                   <span>Extracted Note</span>
-                  <span className={`px-1.5 py-0.2 rounded text-[10px] font-extrabold ${activeComponentTab === 'note' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-[#EB4423]'}`}>
-                    Ready
-                  </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveComponentTab('document')}
-                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-                    activeComponentTab === 'document'
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-100'
-                  }`}
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  <span>Full Clean Document</span>
                 </button>
 
                 <button
