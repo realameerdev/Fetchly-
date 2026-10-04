@@ -303,3 +303,72 @@ export async function downloadDocument(
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
+
+/**
+ * Downloads the dedicated extracted note component (.md or .txt or .pdf).
+ */
+export async function downloadExtractedNote(
+  docData: ExtractedPageData,
+  format: 'Markdown' | 'TXT' | 'PDF' = 'Markdown'
+): Promise<void> {
+  const noteTitle = docData.notes?.title || `Note - ${docData.title || 'Untitled'}`;
+  const cleanTitle = noteTitle.replace(/[^a-z0-9]+/gi, '_').slice(0, 35).toLowerCase();
+  const baseName = `fetchly_note_${cleanTitle}`;
+
+  if (format === 'PDF') {
+    const notePdfData: ExtractedPageData = {
+      ...docData,
+      title: noteTitle,
+      plainText: docData.notes?.plainText || docData.notes?.markdown || docData.plainText || '',
+      summary: docData.notes?.keyTakeaways?.join(' · ') || docData.summary || 'Extracted Note via Fetchly',
+    };
+    const blob = generateValidPdfBlob(notePdfData);
+    triggerBlobDownload(blob, `${baseName}.pdf`);
+  } else if (format === 'TXT') {
+    const textContent = docData.notes?.plainText || docData.notes?.markdown || '';
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
+    triggerBlobDownload(blob, `${baseName}.txt`);
+  } else {
+    // Markdown
+    const mdContent = docData.notes?.markdown || `# ${noteTitle}\n\n${docData.notes?.plainText || ''}`;
+    const blob = new Blob([mdContent], { type: 'text/markdown;charset=utf-8' });
+    triggerBlobDownload(blob, `${baseName}.md`);
+  }
+}
+
+/**
+ * Downloads key research findings and takeaways as a structured briefing (.md).
+ */
+export async function downloadResearchFindings(docData: ExtractedPageData): Promise<void> {
+  const cleanTitle = (docData.title || 'research').replace(/[^a-z0-9]+/gi, '_').slice(0, 30).toLowerCase();
+  let content = `# 🔍 Research Findings & Takeaways: ${docData.title}\n`;
+  content += `**Source:** ${docData.sourceUrl}\n**Date:** ${new Date().toLocaleDateString()}\n\n---\n\n`;
+
+  if (docData.keyFindings && docData.keyFindings.length > 0) {
+    content += `## Key Findings\n\n`;
+    docData.keyFindings.forEach((f, idx) => {
+      content += `### ${idx + 1}. ${f.label}\n${f.detail}\n\n`;
+    });
+  }
+
+  if (docData.quotes && docData.quotes.length > 0) {
+    content += `## Notable Quotes & Statements\n\n`;
+    docData.quotes.forEach(q => {
+      content += `> "${q.quote}"\n> — *${q.author || 'Source'}* ${q.context ? `(${q.context})` : ''}\n\n`;
+    });
+  }
+
+  const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+  triggerBlobDownload(blob, `fetchly_findings_${cleanTitle}.md`);
+}
+
+function triggerBlobDownload(blob: Blob, filename: string): void {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}
