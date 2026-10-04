@@ -592,8 +592,8 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             {/* TAB CONTENT 2: FULL CLEAN DOCUMENT */}
             {activeComponentTab === 'document' && (
               <div className="space-y-2">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-lg">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div className="flex items-center gap-1 bg-slate-200/80 p-0.5 rounded-lg shrink-0">
                     <button
                       type="button"
                       onClick={() => setViewTab('formatted')}
@@ -618,7 +618,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                     </button>
                   </div>
 
-                  <span className="text-[11px] text-slate-400 font-medium">
+                  <span className="text-[11px] text-slate-400 font-medium shrink-0">
                     Clean {format} Output
                   </span>
                 </div>

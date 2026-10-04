@@ -372,9 +372,9 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
 
         {/* Sub-toolbar for Formats (if in Document mode) */}
         {modalTab === 'document' && (
-          <div className="px-3 sm:px-6 py-2 bg-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+          <div className="px-3 sm:px-6 py-2.5 bg-white border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
             {/* Horizontal format swipe */}
-            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5 min-w-0">
+            <div className="flex items-center gap-1 overflow-x-auto scrollbar-none py-0.5 min-w-0 max-w-full">
               <span className="text-[10px] font-bold text-slate-400 mr-1 uppercase tracking-wide shrink-0">
                 Format:
               </span>
@@ -398,7 +398,7 @@ Extracted ${documentData?.wordCount || 1420} words. Clutter reduction: ${documen
             </div>
 
             {/* View Mode & Zoom Controls */}
-            <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-slate-500 font-semibold shrink-0">
+            <div className="flex items-center justify-between sm:justify-end gap-2 text-xs text-slate-500 font-semibold shrink-0 pt-1 sm:pt-0 border-t sm:border-t-0 border-slate-100">
               {(activeFormat === 'Markdown' || activeFormat === 'HTML') && (
                 <div className="flex items-center bg-slate-100 p-0.5 rounded-lg text-[11px]">
                   <button
