@@ -26,7 +26,8 @@ import {
   AlertTriangle,
   Sparkles,
   X,
-  FileCheck
+  FileCheck,
+  Clipboard
 } from 'lucide-react';
 import { FilePreviewModal, ExtractedPageData } from './FilePreviewModal';
 import { 
@@ -80,6 +81,27 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
     { name: 'TechCrunch News', url: 'https://techcrunch.com' },
   ];
 
+  const handleAutoPaste = async () => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        const text = await navigator.clipboard.readText();
+        if (text && text.trim().length > 0) {
+          setUrl(text.trim());
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Clipboard permission required or read failed:', err);
+    }
+
+    try {
+      const clipboardContent = window.prompt('Paste your copied URL/link here:');
+      if (clipboardContent && clipboardContent.trim()) {
+        setUrl(clipboardContent.trim());
+      }
+    } catch {}
+  };
+
   const handleStartConversion = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!url.trim()) return;
@@ -94,12 +116,12 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
       const stepTimer1 = setTimeout(() => {
         setProgressPercent(45);
         setProgressStep('Executing JavaScript & waiting for dynamic page render...');
-      }, 600);
+      }, 1000);
 
       const stepTimer2 = setTimeout(() => {
         setProgressPercent(75);
         setProgressStep(`Extracting main content and structuring clean ${format} file...`);
-      }, 1400);
+      }, 2500);
 
       let doc: ExtractedPageData | null = null;
 
@@ -113,7 +135,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             readerMode,
             includeImages
           }),
-          signal: AbortSignal.timeout(4000)
+          signal: AbortSignal.timeout(35000)
         });
 
         if (response.ok) {
@@ -123,7 +145,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
           }
         }
       } catch (backendErr) {
-        // Fallback instantly to client-side extraction
+        console.warn('Backend API call failed, falling back to client extraction:', backendErr);
       }
 
       // If backend was not reached or returned an error, run resilient client-side extraction
@@ -270,9 +292,20 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
           {/* Step 1: URL Input */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-2">
-              <label className="text-xs font-bold text-slate-500 tracking-wider uppercase">
-                01 — Enter Any Public Web Link or Topic
-              </label>
+              <div className="flex items-center gap-2">
+                <label className="text-xs font-bold text-slate-500 tracking-wider uppercase">
+                  01 — Enter Any Public Web Link or Topic
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAutoPaste}
+                  className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-orange-100 hover:bg-orange-200 text-[#EB4423] text-[11px] font-extrabold rounded-lg transition-all cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
+                  title="Paste from clipboard"
+                >
+                  <Clipboard className="w-3 h-3" />
+                  <span>Paste</span>
+                </button>
+              </div>
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none pb-0.5">
                 <span className="text-[10px] uppercase font-bold text-slate-400 shrink-0">Try:</span>
                 {samplePresets.map((preset, i) => (
@@ -297,18 +330,31 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 placeholder="https://example.com/article-or-documentation"
-                className="w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white border-2 border-slate-200 focus:border-[#EB4423] rounded-2xl text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal outline-hidden transition-all shadow-inner"
+                className="w-full pl-10 sm:pl-12 pr-16 sm:pr-20 py-3 sm:py-3.5 bg-slate-50 hover:bg-slate-50/80 focus:bg-white border-2 border-slate-200 focus:border-[#EB4423] rounded-2xl text-xs sm:text-sm font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal outline-hidden transition-all shadow-inner"
               />
-              {url && (
-                <button
-                  type="button"
-                  onClick={() => setUrl('')}
-                  className="absolute right-3 p-1.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer hover:bg-slate-200/60 transition-colors"
-                  title="Clear input"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+              <div className="absolute right-3 flex items-center gap-1">
+                {!url && (
+                  <button
+                    type="button"
+                    onClick={handleAutoPaste}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-orange-100 hover:bg-orange-200 text-[#EB4423] text-xs font-bold rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-xs"
+                    title="Paste from clipboard"
+                  >
+                    <Clipboard className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Paste</span>
+                  </button>
+                )}
+                {url && (
+                  <button
+                    type="button"
+                    onClick={() => setUrl('')}
+                    className="p-1.5 text-slate-400 hover:text-slate-600 rounded-full cursor-pointer hover:bg-slate-200/60 transition-colors"
+                    title="Clear input"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
             </div>
             <p className="mt-1.5 text-[11px] text-slate-400">
               Fetchly extracts the note, research points, and full document without ads or paywall scripts.
@@ -449,7 +495,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
           <div className="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 sm:p-6 space-y-4">
             {/* Header info */}
             <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 pb-3.5 border-b border-slate-200/80">
-              <div className="min-w-0 space-y-1.5 flex-1">
+              <div className="min-w-0 space-y-1">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-[#EB4423] shrink-0" />
                   <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate">
@@ -471,7 +517,7 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
               </div>
 
               {/* Stats badges */}
-              <div className="flex items-center sm:flex-col gap-2 shrink-0 self-start text-xs font-semibold text-slate-500">
+              <div className="flex flex-wrap sm:flex-col gap-1.5 sm:items-end text-xs font-semibold text-slate-500 shrink-0">
                 <span className="bg-white border border-slate-200 px-2.5 py-1 rounded-lg">
                   {extractedData.wordCount || completedResult.wordCount} words
                 </span>
@@ -681,42 +727,40 @@ export const ConversionTool: React.FC<ConversionToolProps> = ({
             )}
 
             {/* ACTION BUTTONS ROW: Responsive with zero mobile overlapping */}
-            <div className="pt-4 border-t border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+            <div className="pt-3 border-t border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
               <button
                 type="button"
                 onClick={handleReset}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer"
+                className="inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer order-2 sm:order-1"
               >
                 <RotateCcw className="w-3.5 h-3.5 text-[#EB4423]" />
                 <span>Run Another URL</span>
               </button>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={handleCopyContent}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer"
-                  >
-                    {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
-                    <span>{copied ? 'Copied' : 'Copy'}</span>
-                  </button>
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 order-1 sm:order-2">
+                <button
+                  type="button"
+                  onClick={handleCopyContent}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 text-xs font-bold rounded-xl transition-all shadow-2xs cursor-pointer truncate"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" /> : <Copy className="w-3.5 h-3.5 shrink-0" />}
+                  <span className="truncate">{copied ? 'Copied' : 'Copy'}</span>
+                </button>
 
-                  <button
-                    type="button"
-                    onClick={() => setIsPreviewOpen(true)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-orange-50 hover:bg-orange-100 text-[#EB4423] border border-orange-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs"
-                  >
-                    <Eye className="w-3.5 h-3.5 shrink-0" />
-                    <span>Preview File</span>
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsPreviewOpen(true)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-orange-50 hover:bg-orange-100 text-[#EB4423] border border-orange-200 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs truncate"
+                >
+                  <Eye className="w-3.5 h-3.5 shrink-0" />
+                  <span className="truncate">Preview File</span>
+                </button>
 
                 <button
                   type="button"
                   disabled={isDownloading}
                   onClick={handleDownload}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#EB4423] hover:bg-[#d43a1a] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+                  className="col-span-2 sm:col-span-1 inline-flex items-center justify-center gap-2 px-5 py-2 bg-[#EB4423] hover:bg-[#d43a1a] disabled:opacity-50 text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer whitespace-nowrap"
                 >
                   <Download className="w-3.5 h-3.5 shrink-0" />
                   <span>{isDownloading ? 'Generating...' : `Download ${format}`}</span>

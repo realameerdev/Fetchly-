@@ -210,18 +210,32 @@ app.post('/api/fetch-url', async (req: Request, res: Response) => {
           const rawMarkdown = firecrawlData.markdown || '';
           const cleanHtml = firecrawlData.html || firecrawlData.rawHtml || '';
           const screenshot = firecrawlData.screenshot || firecrawlData['screenshot@fullPage'] || '';
-          const plainText = markdownToPlainText(rawMarkdown);
-          const wordCount = plainText ? plainText.split(/\s+/).filter(Boolean).length : 950;
-          const readingTime = Math.max(1, Math.ceil(wordCount / 200));
-
           const summary = meta.description || meta.ogDescription || `Extracted and rendered via Firecrawl with navigation, ads, and tracking removed.`;
 
           const coreTakeaways = [
             `Processed and rendered via Firecrawl engine with full JavaScript execution.`,
             `Clean semantic extraction with 100% of banner ads and cookie popups removed.`,
-            `Body text contains ${wordCount} words formatted with clean headings and lists.`,
+            `Body text contains semantic headings, paragraphs, and lists.`,
             screenshot ? `Full-page visual screenshot captured and ready for PNG export.` : `Multi-format export prepared.`
           ];
+
+          const rawPlainText = markdownToPlainText(rawMarkdown);
+          const plainText = `TITLE: ${pageTitle}
+SOURCE: ${finalUrl}
+DATE: ${new Date().toLocaleDateString()}
+DOMAIN: ${domain}
+
+SUMMARY:
+${summary}
+
+KEY TAKEAWAYS:
+${coreTakeaways.map(t => `• ${t}`).join('\n')}
+
+DOCUMENT BODY:
+${rawPlainText}`;
+
+          const wordCount = plainText ? plainText.split(/\s+/).filter(Boolean).length : 950;
+          const readingTime = Math.max(1, Math.ceil(wordCount / 200));
 
           const noteMarkdown = `# Research Note: ${pageTitle}
 **Source:** ${finalUrl}  
