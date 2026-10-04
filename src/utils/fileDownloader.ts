@@ -130,13 +130,23 @@ export async function generateValidPngBlob(docData: ExtractedPageData): Promise<
         }
         return new Blob([ab], { type: mime });
       } else if (docData.screenshot.startsWith('http')) {
-        const res = await fetch(docData.screenshot);
-        if (res.ok) {
-          return await res.blob();
+        // Fetch via CORS-safe public proxy on Vercel production to avoid CORS errors
+        try {
+          const proxyRes = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent(docData.screenshot)}`, {
+            signal: AbortSignal.timeout(5000),
+          });
+          if (proxyRes.ok) {
+            return await proxyRes.blob();
+          }
+        } catch {
+          const res = await fetch(docData.screenshot, { mode: 'cors' });
+          if (res.ok) {
+            return await res.blob();
+          }
         }
       }
     } catch (err) {
-      console.warn('Direct screenshot blob conversion failed, falling back to canvas:', err);
+      // Fallback silently to canvas document generator
     }
   }
 
